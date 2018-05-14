@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+ <html lang="es"> 
+    <head>
+        <meta charset="UTF-8"/>
+        <title>Indice Masa Corporal</title>
+
+
+        <script>            
+            var imc; var img;
+            // funcion que convierte un numero en un texto, declaro una variable string
+
+            function imcNominal(imc){
+                var string_imcNominal = "";
+
+                if(imc <16){
+                    string_imcNominal = "estas desnutrido";
+                }
+                else if (imc>16 && imc<18){
+                    string_imcNominal  = "estas delgado";
+                }
+                else if (imc>18 && imc<25){
+                    string_imcNominal = "estas normal";
+                }
+                else if (imc>25 && imc<=31){
+                    string_imcNominal ="estas sobrepeso";
+                }
+                else{
+                    string_imcNominal = "estas obeso";
+                } 
+                return string_imcNominal;
+            } 
+
+            function imagen(img){
+                var img = "recogerImagen";
+
+                if(imc <16){
+                    img = "http://2.bp.blogspot.com/-UtGbKAe5veE/Vet19nSED-I/AAAAAAAAAB4/u_xSb_aACUw/s1600/desnutricion%2B2.jpg";
+                }
+                else if (imc>16 && imc<18){
+                    img  = "https://www.google.es/imgres?imgurl=http%3A%2F%2Fslideplayer.es%2F8918817%2F26%2Fimages%2F4%2FSoy%2Bdelgada%2BSoy%2Bdelgado.jpg&imgrefurl=http%3A%2F%2Fslideplayer.es%2Fslide%2F8918817%2F&docid=VmNkYgTG19TgEM&tbnid=Hix7SuQFbPPskM%3A&vet=10ahUKEwiyp82cioXbAhVMPhQKHeJIB3oQMwhiKCIwIg..i&w=960&h=720&bih=859&biw=1200&q=imagenes%20fisico%20delgado&ved=0ahUKEwiyp82cioXbAhVMPhQKHeJIB3oQMwhiKCIwIg&iact=mrc&uact=8.jpg";
+                }
+                else if (imc>18 && imc<25){
+                    img = "https://stopalaobesidad.files.wordpress.com/2014/01/matthewmcconaughey_normal.jpg?w=450";
+                }
+                else if (imc>25 && imc<=31){
+                    img ="http://www.formulatv.com/images/articulos/76000/76223_5b1eb6f55c-talt.jpg";
+                }
+                else{
+                    img = "http://www.milenio.com/salud/hombre_mas_obeso_mundo-juan_pedro-intervencion-quirurgica-milenio-noticias_MILIMA20170509_0225_30.jpg";
+                } 
+                return img;
+
+            }
+            
+            // funcion que calcula operacion del IMC( Indice de Masa Corporal)
+            function calcularImc(){
+                //
+                var peso = document.getElementById("peso").value;
+                var estatura = document.getElementById("estatura").value;
+                var imc = peso/Math.pow(estatura,2);
+            
+                var str_imc = imcNominal(imc);
+                var img = imagen(imc);
+
+                document.getElementById("imcNominal").value = str_imc;
+
+                document.getElementById("recogerImagen").src = img;
+            
+                
+            }
+
+           
+            
+        </script>
+
+</head>
+    <body>
+        <p>Herramienta para calcular el indice de masa corporal</p>
+        <p>Introduce tu peso: <input type="text" id="peso" placeholder="introduce tu peso"></p>
+        <p>Introduce tu altura <input type="text" id="estatura" placeholder="introduce tu altura"></p>
+
+        <button onclick="calcularImc()">Calcula tu IMC</button> 
+        
+        <br><br> 
+
+        <p>Tu indice de masa corporal</p>
+        <input type="text" id="imcNominal" placeholder=""></p>
+        <p>El resultado de tu Test es!!!!!</p>
+        <input type="text" id="resultadoNominal" placeholder="aqui saldra tu resultado"></p> 
+
+        <img id="recogerImagen"/>
+    </body>
+ </html>
