@@ -1,0 +1,78 @@
+<!-- Tenemos una imagen donde se mostraran dos imagenes (iguales pero con distinto color) y cuatro botones
+    botón 1 - de un color y que muestra la imagen de ese color
+    botón 2 - de otro color y que muestra la imagen de ese color
+    botón 3 - play - hace un slide con las dos imagenes para que vayan pasando de una a otra
+    botón 4 - stop - para el slide  
+-->
+<html>
+   <head>
+        <title>Slider</title>
+        <script language="javascript">
+            // Constantes
+            const IMG1 = "camisetaAzul.jpeg";
+            const IMG2 = "camisetaGris.jpeg";
+            const DIRECTORIO_IMG = "img/10/";
+            // Variables globales
+            var camisetas = new Array();
+            var idIntervalo;
+
+            window.onload = function () {
+                // cargamos una imagen por defecto
+                document.getElementById("fotito").src = DIRECTORIO_IMG + IMG1;
+                // añadimos los métodos a los botones
+                document.getElementById("color1").onclick = cambiarFoto1;
+                document.getElementById("color2").onclick = cambiarFoto2;
+                document.getElementById("play").onclick = iniciarSlide;
+                document.getElementById("stop").onclick = pararSlide;
+            }
+
+            function cambiarFoto1() {
+                cambiarImagen(IMG1);
+            }
+
+            function cambiarFoto2() {
+                cambiarImagen(IMG2);
+            }
+
+            function cambiarImagen(imagen){
+                document.getElementById("fotito").src = DIRECTORIO_IMG + imagen;
+            }
+
+            function iniciarSlide() {
+
+                idIntervalo = window.setInterval(mostrarSiguienteImagen, 3000);
+            }
+
+            function mostrarSiguienteImagen() {
+                var imagenSiguiente;
+                var posNombreImagen;
+                // Obtenemos la imagen que se esta viendo
+                var imagenActual = document.getElementById("fotito").src;
+                posNombreImagen = imagenActual.indexOf(DIRECTORIO_IMG) + DIRECTORIO_IMG.length;
+                imagenActual = imagenActual.substring(posNombreImagen);
+                console.log("imagen actual" + imagenActual);
+
+                if (imagenActual == IMG1) {
+                    imagenSiguiente = IMG2;
+                } else  {
+                    imagenSiguiente = IMG1
+                }
+
+                cambiarImagen(imagenSiguiente);
+
+            }
+
+            function pararSlide() {
+                window.clearInterval(idIntervalo);
+            }
+        </script>
+   </head>
+   <body>
+        <img id="fotito">
+        <button id="color1">Color Azul</button>
+        <button id="color2">color Gris</button>
+        <button id="play">Play</button>
+        <button id="stop">Stop</button>
+   </body>
+</html>
+

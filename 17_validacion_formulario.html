@@ -1,0 +1,187 @@
+<!-- 
+    1 FASE
+    Formulario para validar con los siguientes campos:
+    - nombre (mínimo 6 letras)
+    - email
+    - contraseña (mínimo de 6)
+    - contraseña repetida (validar que sea igual a contraseña)
+    con dos botones
+    - limpiar
+    - enviar (validación)
+    si la validación es buena POST con JSON al servicio Login y reeenviar a una página de ok
+    si la validación es mala imformar al usuario
+    2 FASE
+    Dos campos más
+    - telefono internacional (para seleccionar prefijo seleccionar banderita del pais, usaremos libreria)
+    - web
+-->
+<html>
+    <head>
+        <title>
+            Validación formulario
+        </title>
+        <link rel="stylesheet" href="../node_modules/intl-tel-input/build/css/intlTelInput.css">
+        <script src=""></script>
+        <script language="javascript">
+            // Constantes
+            const URL_LOGIN = "http://10.1.2.10:8080/appwebprofe/Login";
+            //El mail y el usuario deben tener al menos 6 caracteres formado por letras, números o guiones bajos
+            const EXPRESION_REGULAR_USUARIO_MAIL = /^\w{6,}$/; 
+            const EXPRESION_REGULAR_EMAIL = /^\w+([\.\+\-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/; 
+            const EXPRESION_REGULAR_WEB = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/; 
+            const EXPRESION_REGULAR_TELEFONO = /^\+\d{7,15}$/; 
+            const EXPRESION_REGULAR_PWD = /^\w{6,15}$/;
+            // Mensajes
+            const MSJ_ERROR_VALIDACION = "Revisa los datos, no son correctos."
+            // Variables globales
+            var xmlHTTP = new XMLHttpRequest();
+            // Funciones
+            function enviarFormulario() {
+                // Validamos el formulario
+                var validacionCorrecta = validarFormulario();
+                // si es correcta la validación va al servicio de login
+                if (validacionCorrecta) {
+                    enviarDatos();
+                } else {
+                    // si no es correcta muestra mensaje de error
+                    mostrarErrorValidacion();
+                }
+                return validacionCorrecta;
+            }
+            function validarFormulario() {
+                var validacionCorrecta = true;
+                // validamos el campo nombre
+                var nombre = document.getElementById("nombre").value;
+                validacionCorrecta = validarNombre(nombre);
+                // validamos el campo email
+                if (validacionCorrecta) {
+                    var email = document.getElementById("email").value;
+                    validacionCorrecta = validarEmail(email);
+                } 
+                if (validacionCorrecta) {
+                    // validamos la contraseña
+                    var passw = document.getElementById("passw").value;
+                    validacionCorrecta = validarPassw(passw);
+                } 
+                if (validacionCorrecta) {             
+                    // validamos la contraseña de confirmación
+                    var passw1 = document.getElementById("passwC").value;
+                    if (passw != passw1) {
+                        validacionCorrecta = false;
+                    }
+                }
+                if (validacionCorrecta) {
+                    var telefono = obtenerTelefono();
+                    console.log("telefono" + telefono);
+                    validacionCorrecta = validarTelefono(telefono);
+                }
+                if (validacionCorrecta) {
+                    var web = document.getElementById("web").value;
+                    validacionCorrecta = validarWeb(web);
+                }
+                return validacionCorrecta;
+            }
+
+            function obtenerTelefono() {
+                var codPais = $("#telefono").intlTelInput("getSelectedCountryData").dialCode;
+                var telefono = "+" + codPais + document.getElementById("telefono").value;
+                return telefono;
+            }
+
+            function validarNombre(nombre) {
+                var patron_usuario = new RegExp(EXPRESION_REGULAR_USUARIO_MAIL);
+                var validacion = patron_usuario.test(nombre);
+                return validacion;
+            }
+
+            function validarEmail(email) {
+                var patron_mail = new RegExp(EXPRESION_REGULAR_EMAIL);
+                var validacion = patron_mail.test(email);
+                return validacion;
+            }
+
+            function validarPassw(passw) {
+                var patron_passw = new RegExp(EXPRESION_REGULAR_PWD);
+                var validacion = patron_passw.test(passw);
+                return validacion;
+            }
+
+            function validarTelefono(telefono) {
+                var patron_telefono = new RegExp(EXPRESION_REGULAR_TELEFONO);
+                var validacion = patron_telefono.test(telefono);
+                return validacion;
+            }
+
+            function validarWeb(web) {
+                var patron_web = new RegExp(EXPRESION_REGULAR_WEB);
+                var validacion = patron_web.test(web);
+                return validacion;
+            }
+
+            function enviarDatos() {
+                // preparamos el JSON de envio
+                var datosJSON = prepararJSON();
+                // Preparo la llamada
+                xmlHTTP.onreadystatechange = resultadoLogin;
+                // paramentros de open (metodo a usar, servicio que se llama, esAsincrono)
+                xmlHTTP.open('POST', URL_LOGIN, true);
+                xmlHTTP.setRequestHeader('Content-Type', 'application/json');
+                xmlHTTP.send(datosJSON); // el cuerpo del mensaje
+            }
+
+            function prepararJSON() {
+                var nombre = document.getElementById("nombre").value;
+                var email = document.getElementById("email").value;
+                var passwd = document.getElementById("passw").value;
+                var telefono = obtenerTelefono();
+                var web = document.getElementById("web").value;
+                var datos = {
+                    nombre: nombre,
+                    email: email,
+                    pwd: passwd,
+                    telefono: telefono,
+                    web: web
+                };
+                var datosJSON = JSON.stringify(datos);
+                return datosJSON;
+            }
+
+            function resultadoLogin() {
+                var estado = xmlHTTP.readyState;
+                console.log("procesar evento invocado " + estado);
+                // cuando estado = 4 procesamos el mensaje HTTP de respuesta
+                if (estado == 4) {
+                    var respuesta = xmlHTTP.responseText;
+                    if (xmlHTTP.status == 200) {
+                        location.href ="17_validacion_OK.html";
+                    }
+                    console.log(respuesta);
+                }
+            }
+
+            function mostrarErrorValidacion() {
+                var hook = document.getElementById("errorValidacion");
+                hook.innerHTML = MSJ_ERROR_VALIDACION;
+            }
+        </script>
+    </head>
+    <body>
+        <form>
+            <label for="nombre">Nombre</label> <input type="text" id="nombre"><br>
+            <label for="email">Email</label> <input type="text" id="email"><br>
+            <label for="passw">Contraseña</label> <input type="password" id="passw"><br>
+            <label for="passwC">Repita contraseña</label> <input type="password" id="passwC"><br>
+            <label for="telefono">Teléfono</label> <input type="tel" id="telefono"><br>
+            <label for="web">Web</label> <input type="text" id="web"><br><br>
+            <button type="reset">Limpiar</button>
+        </form>
+        <button type="submit" onclick="enviarFormulario(); return false;">Enviar</button>
+        <div id="errorValidacion"></div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="../node_modules/intl-tel-input/build/js/intlTelInput.js"></script>
+        <script>
+          $("#telefono").intlTelInput();
+        </script> 
+    </body>
+</html>

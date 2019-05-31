@@ -1,0 +1,110 @@
+<!-- Tenemos una imagen donde se mostraran varias imagenes (iguales pero con distinto color) y varios botones
+    botón 1 - play - hace un slide con las dos imagenes para que vayan pasando de una a otra
+    botón 2 - stop - para el slide  
+    resto de botones - uno para cada color, que al ser pulsado mostrara la foto correspondiente al color 
+-->
+<html>
+   <head>
+        <title>Slider</title>
+        <script language="javascript">
+            // Constantes
+            const DIRECTORIO_IMG = "img/10/";
+            const ID_BOTON_COLOR = "botonColor";
+            // Variables globales
+            var listaFotos = new Array();
+            var idIntervalo;
+            var posFotoActual = 0;
+            var elemIMG;
+            // Definición del objeto ImagenColor
+            function ImagenColor(color, imagen) {
+                this.color = color;
+                this.imagen = imagen;
+            }
+
+            window.onload = function () {
+                // Carga de datos de imagenes
+                cargarDatosImagenes();
+                // cargamos una imagen por defecto (usamos la primera del array)
+                elemIMG = document.getElementById("fotito");
+                cambiarImagen(listaFotos
+                [posFotoActual].imagen); 
+                // creamos los botones para cada color
+                cargarBotonesColores();
+                // añadimos eventos a los botones play y stop
+                document.getElementById("play").onclick = iniciarSlide;
+                document.getElementById("stop").onclick = pararSlide;
+            }
+
+            function cargarDatosImagenes() {
+                // cargamos el array con los objetos de tipo imagenes del slide
+                // Gris
+                listaFotos
+                .push(new ImagenColor("gris","camisetaGris.jpeg"));
+                // Azul
+                listaFotos
+                .push(new ImagenColor("azul","camisetaAzul.jpeg"));
+                // Rosa
+                listaFotos
+                .push(new ImagenColor("rosa","camisetaRosa.jpeg"));
+            }
+
+            function cargarBotonesColores() {
+                var contenedor = document.getElementById("botones");
+                var boton;
+                for (var i = 0; i < listaFotos
+                .length; i++) {
+                    // Creamos el botón y le damos id, texto y le añadimos una función al evento onclick
+                    boton = document.createElement("BUTTON");
+                    boton.id = ID_BOTON_COLOR + i;
+                    boton.innerHTML = "Color " + listaFotos
+                    [i].color;
+                    boton.onclick = cambiarFoto;
+                    // Añadimos el botón al contenedor
+                    contenedor.appendChild(boton);
+                }
+            }
+
+            function cambiarFoto(evento) {
+                // determino que foto hay que cargar en función del botón clicado
+                var btnTocado = evento.target.id;
+                var indFoto = btnTocado.substring(ID_BOTON_COLOR.length); 
+                // mostramos la foto correspondiente
+                cambiarImagen(listaFotos[indFoto].imagen); 
+                // Actualizamos la variable que guarda la foto que se esta mostrando
+                posFotoActual = indFoto;
+            }
+
+            function cambiarImagen(imagen){
+                document.getElementById("fotito").src = DIRECTORIO_IMG + imagen;
+            }
+
+            function iniciarSlide() {
+
+                idIntervalo = window.setInterval(mostrarSiguienteImagen, 3000);
+            }
+
+            function mostrarSiguienteImagen() {
+                // Calculamos la foto siguiente a mostrar en función de la actual
+                // otra opción es usando (cont MOD array.length) y teniendo en cuenta desde donde se empiez
+                if (posFotoActual < listaFotos.length - 1) {
+                    posFotoActual++
+                } else {
+                    posFotoActual = 0;
+                }
+                cambiarImagen(listaFotos[posFotoActual].imagen);
+            }
+
+            function pararSlide() {
+                window.clearInterval(idIntervalo);
+            }
+        </script>
+   </head>
+   <body>
+        <img id="fotito">
+        <div id="botones">        
+            <button id="play">Play</button>
+            <button id="stop">Stop</button>
+        </div>
+   </body>
+</html>
+

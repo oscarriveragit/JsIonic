@@ -1,0 +1,285 @@
+<html>
+<head>
+    <title>
+        Memory
+    </title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://albert-gonzalez.github.io/easytimer.js/dist/easytimer.min.js"></script>
+    <script language="javascript">
+        // constantes de los niveles de juego
+        const NIVEL_FACIL = 1;
+        const NIVEL_MEDIO = 2;
+        const NIVEL_DIFICIL = 3;
+        // constantes de los colores usar para las casillas
+        const COLOR_REVES = "black";
+        const COLOR1 = "red";
+        const COLOR2 = "green";
+        const COLOR3 = "blue";
+        const COLOR4 = "pink";
+        const COLOR5 = "orange";
+        const COLOR6 = "yellow";
+        const COLOR7 = "grey";
+        const COLOR8 = "brown";
+        // ESTADOS DE JUEGO
+        const PRIMER_CLICK = 1;
+        const SEGUNDO_CLICK = 2;
+        // URL ENVIO RESULTADO
+        const URL_RESULTADOS = "http://10.1.2.10:8080/appwebprofe/SubirRecord";
+        const NOMBRE = "L";
+
+        // VARIABLES GLOBALES DEL JUEGO
+        var estado;
+        var numAciertos;
+        var ficha1;
+        var ficha2;
+        var repartoFichas;
+        var totalParejas;
+        var timer;
+        var xmlHTTP = new XMLHttpRequest();
+
+        function jugar(nivel) {
+            // variables
+            var datosNivel;
+            var numCol;
+            var numFil;
+            var tablero;
+            // INICIALIZAMOS EL JUEGO
+            estado = PRIMER_CLICK;
+            numAciertos = 0;
+            // obtenemos los parametros del nivel
+            datosNivel = obtenerDatosNivel(nivel);
+            numCol = datosNivel["numCol"];
+            numFil = datosNivel["numFil"];
+            totalParejas = numCol * numFil / 2;
+            // Obtenemos el tablero en función de los parametros definidos para el nivel de juego seleccionado
+            tablero = generarTablero(numCol, numFil);
+            // mostramos el tablero en pantalla
+            document.getElementById("tablero").innerHTML = tablero;
+            // inicializamos el div de mensaje de éxito
+            document.getElementById("mensajeFinal").innerHTML = "";
+            // Ponemos los listener 
+            incluirEventosJuego();
+            // Vamos a "repartir" las fichas del memory en el tablero
+            repartoFichas = repartirFichasEnTablero(numCol * numFil);
+            // inicializamos el timer
+            document.getElementById("basicUsage").innerHTML = "00:00:00";
+            timer = new Timer();
+            timer.start();
+            timer.addEventListener('secondsUpdated', function (e) {
+                document.getElementById("basicUsage").innerHTML = timer.getTimeValues().toString();
+                //$('#basicUsage').html(timer.getTimeValues().toString()); // los mismo que antes usando jQuery
+            });
+        }
+
+        function repartirFichasEnTablero(longitud) {
+            var ordenRepartoFichas;
+
+            ordenRepartoFichas = generarListaNumeros(longitud);
+            ordenRepartoFichas = desordenar(ordenRepartoFichas);
+
+            return ordenRepartoFichas;
+        }
+
+        function incluirEventosJuego() {
+            var lista_td = document.getElementById("tablero").querySelectorAll("td");
+            for (var i = 0; i < lista_td.length; i++) {
+                lista_td[i].addEventListener('click', descubrirFicha);
+            }
+        }
+
+        function descubrirFicha(evento) {
+            //target, es el elemento tocado
+            //currentTarget, es el elemento contenedor
+            var fichaTocada = evento.target;
+            // obtener número de ficha pulsada
+            var numFichaTocada = fichaTocada.id.substr(5);
+            console.log("ficha tocada es " + numFichaTocada);
+            // obtenemos cual es la ficha (el color oculto)
+            var colorOculto = eval("COLOR" + repartoFichas[numFichaTocada - 1]);
+            // comprobamos que no es una ficha vuelta (de las parejas correctas)
+            if (fichaTocada.style.backgroundColor == COLOR_REVES) {
+                // mostramos el color oculto
+                cambiarColor(fichaTocada, colorOculto);
+                //fichaTocada.style.backgroundColor = colorOculto;
+                // ver el estado de juego 
+                if (estado == PRIMER_CLICK) {
+                    ficha1 = numFichaTocada;
+                    // cambiamos al siguiente estado
+                    estado = SEGUNDO_CLICK;
+                } else if (estado == SEGUNDO_CLICK) {
+                    ficha2 = numFichaTocada;
+                    // comparamos si son las misma ficha
+                    if (repartoFichas[ficha1 - 1] == repartoFichas[ficha2 - 1]) {
+                        // aumentamos el número de aciertos
+                        numAciertos++;
+                        if (numAciertos == totalParejas) {
+                            // paramos el timer
+                            timer.pause();
+                            // mostramos el mensaje de final de juego
+                            document.getElementById("mensajeFinal").innerHTML = "<strong>Lo has conseguido!!!</strong>";
+                            // enviar resultado
+                            enviarResultado();
+                        }
+                    } else {
+                        // No ha acertado, esperamos un pequeño tiempo y damos la vuelta a las fichas
+                        window.setTimeout("voltearFichas(ficha1, ficha2)", 1000);
+                    }
+                    // cambiamos al siguiente estado
+                    estado = PRIMER_CLICK;
+                }
+            }
+        }
+
+        function enviarResultado() {
+            // obtenemos el resultado a mandar
+            var resultado = timer.getTimeValues().toString();
+            console.log("tiempo es de tipo " + typeof(resultado));
+            console.log("tiempo " + resultado);
+            var record = {
+                tiempo:resultado,
+                nombre:NOMBRE
+            };
+            var recordJSON = JSON.stringify(record);
+            // Preparo la llamada
+            xmlHTTP.onreadystatechange = procesarClasificacion;
+            // paramentros de open (metodo a usar, servicio que se llama, esAsincrono)
+            xmlHTTP.open('POST', URL_RESULTADOS, true);
+            xmlHTTP.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            xmlHTTP.send(recordJSON); // el cuerpo del mensaje
+        }
+
+        function procesarClasificacion() {
+            var estado = xmlHTTP.readyState;
+            console.log("procesar evento invocado " + estado);
+            // cuando estado = 4 procesamos el mensaje HTTP de respuesta
+            if (estado == 4) {
+                var respuesta = xmlHTTP.responseText;
+                console.log(respuesta);
+                mostrarResultados(respuesta);
+            }
+        }
+
+        function mostrarResultados(respuesta) {
+            var lstClasificacion = new Array();
+            if (respuesta != null) {
+                // parseamos la salida para obtener las clasificaciones
+                lstClasificacion = parsearRespuesta(respuesta);
+                // ordenamos los resultados de la clasificación
+                lstClasificacion.sort(comparaResultados);
+                // mostramos la clasificación ordenada
+                mostrarClasificacion(lstClasificacion);
+            }
+        }
+
+        function parsearRespuesta(respuesta) {
+            var lstClasificacion = new Array();
+
+            // Recorremos el JSON de respuesta, extrayendo los nombres y los tiempos
+            // y guardandolas en un array
+            if (respuesta != null) {
+                var JSONClasificacion = JSON.parse(respuesta);
+                var totalResultados = JSONClasificacion.ranking.length;
+                console.log("total de resultados devueltos " + totalResultados);
+                for (i = 0; i < totalResultados; i++) {
+                    resultClasif = {
+                        nombre: JSONClasificacion.ranking[i].nombre,
+                        tiempo: JSONClasificacion.ranking[i].tiempo
+                    }
+                    lstClasificacion.push(resultClasif);
+                }
+                console.log("lstClasificacion " + lstClasificacion);
+            }
+            return lstClasificacion;
+        
+        }
+
+        function comparaResultados(resultado1, resultado2) {
+            // obtenemos el timepo de resultado1
+            var tiempo1 = resultado1.tiempo;
+            // obtenemos el tiempo de resultado2
+            var tiempo2 = resultado2.tiempo;
+            // resultado de la comparacion
+            resultado = tiempo1.localeCompare(tiempo2);
+            
+            return resultado;
+        }
+
+        function mostrarClasificacion(lstClasificacion) {
+            var html = "";
+            for (i = 0; i < lstClasificacion.length; i++) {
+                html = html + lstClasificacion[i].tiempo + " - " + lstClasificacion[i].nombre + "<br>";
+            }
+            document.getElementById("clasificacion").innerHTML = html;
+        }
+
+        function cambiarColor(elemento, color) {
+            elemento.style.backgroundColor = color;
+        }
+
+        function voltearFichas(ficha1, ficha2) {
+            document.getElementById("ficha" + ficha1).style.backgroundColor = COLOR_REVES;
+            document.getElementById("ficha" + ficha2).style.backgroundColor = COLOR_REVES;
+        }
+
+        function generarListaNumeros(longitud) {
+            var listaNumeros = new Array();
+            for (i = 1; i <= (longitud / 2); i++) {
+                listaNumeros[i - 1] = i;
+                listaNumeros[(longitud / 2) + i - 1] = i;
+            }
+            return listaNumeros;
+        }
+        function obtenerDatosNivel(nivel) {
+            var datosNivel = new Object();
+            if (nivel == NIVEL_FACIL) {
+                datosNivel.numCol = 2;
+                datosNivel.numFil = 3;
+            } else if (nivel == NIVEL_MEDIO) {
+                datosNivel.numCol = 3;
+                datosNivel.numFil = 4;
+            } else {
+                datosNivel.numCol = 4;
+                datosNivel.numFil = 4;
+            }
+
+            return datosNivel;
+        }
+
+        function desordenar(lista) {
+            var listaDesordenada;
+            listaDesordenada = lista.sort(function () { return Math.random() - 0.5 });
+            return listaDesordenada;
+        }
+
+        function generarTablero(numCol, numFil) {
+            var tablero;
+            var numFicha = 1;
+            tablero = "<table border='2'>";
+            for (var fil = 0; fil < numFil; fil++) {
+                tablero += "<tr>";
+                for (var col = 0; col < numCol; col++) {
+                    tablero += "<td width='70' height='70' style='background-color: " + COLOR_REVES + ";' id='ficha" + numFicha + "'></td>";
+                    numFicha++;
+                }
+                tablero += "</tr>";
+            }
+            tablero += "</table>"
+            return tablero;
+        }
+
+
+    </script>
+
+</head>
+
+<body>
+    <button onclick="jugar(NIVEL_FACIL);">Fácil</button>
+    <button onclick="jugar(NIVEL_MEDIO);">Medio</button>
+    <button onclick="jugar(NIVEL_DIFICIL);">Difícil</button>
+    <div id="tablero"></div>
+    <div id="mensajeFinal"></div>
+    <div id="basicUsage"></div>
+    <div id="clasificacion"></div>
+
+</body>
+</html>

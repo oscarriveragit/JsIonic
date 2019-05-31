@@ -1,0 +1,36 @@
+<html>
+   <head>
+      <title>
+         P&aacute;gina con Javascript.
+      </title>
+      <script language="javascript">
+          const SECUENCIA_DNI = "TRWAGMYFPDXBNJZSQVHLCKE";
+         function calcularLetra() {
+            // obtengo el DNI
+            var S_dni = document.getElementById("num_dni").value;
+            // convierto de String a Number
+            var N_dni = parseInt(S_dni, 10);
+            // confirmo que no hay error
+            if (isNaN(N_dni)) {
+                alert ("El Dni introducido no es válido");
+            } else {
+                // Dividir entre 23 y obtemer el resto
+                var N_resto = N_dni % 23;
+                // Obtengo la letra correspondiente al resto
+                var S_letra = SECUENCIA_DNI.charAt(N_resto);
+                // Mostrar la letra del DNI
+                document.getElementById("letra").value = S_letra;
+                document.getElementById("letrita").innerHTML = S_letra;
+            }
+         }
+      </script>
+   </head>
+   <body>
+   
+            <label for="num_dni">DNI</label><input type="text" id="num_dni">
+            <input type="text" id="letra" readonly>
+            <span id="letrita"> </span>
+            <button onclick="calcularLetra();">Calcula letra</button>
+  
+   </body>
+</html>

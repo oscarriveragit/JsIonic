@@ -1,0 +1,94 @@
+<!-- Dos funcionalidades:
+    - codificar el texto usando charCodeAt
+    - enviar al servidor
+-->
+<html>
+   <head>
+      <title>
+         Codificador
+      </title>
+      <script language="javascript">
+        const DIR_SERV_ENVIO = "http://10.1.2.10:8080/appwebprofe/EnviarMensaje";
+        const DIR_SERV_CLAVE = "http://10.1.2.10:8080/appwebprofe/ObtenerClave";
+        var xmlHTTP = new XMLHttpRequest();
+        var claveCifrado;
+
+        window.onload = function () {
+            obtenerClave();
+        };
+        function codificarTexto() {
+            // recuperamos el texto a codificar
+            var textoPlano = document.getElementById("textoPlano").value;
+            // codificamos el texto
+            var textoCodificado = codificar(textoPlano);
+            // mostramos el texto
+            document.getElementById("textoCodificado").value = textoCodificado;
+        }
+
+        function enviarTextoCifrado() {
+            // obtenemos los textos que queremos enviar
+            var textoCifrado = document.getElementById("textoCodificado").value;
+            var textoPlano = document.getElementById("textoPlano").value;
+            // Preparamos el obketo json de envio
+            var cifrado = {
+            mensaje_original:textoPlano,
+            mensaje_cifrado:textoCifrado,
+            clave:claveCifrado
+            };
+            var cifradoJSON = JSON.stringify(cifrado);
+            console.log("personaJSON = " + cifradoJSON);
+            // Preparo la llamada
+            xmlHTTP.onreadystatechange = procesarEventos;
+            // paramentros de open (metodo a usar, servicio que se llama, esAsincrono)
+            xmlHTTP.open('POST', DIR_SERV_ENVIO, true);
+            xmlHTTP.setRequestHeader('Content-Type', 'application/json');
+            xmlHTTP.send(cifradoJSON); // el cuerpo del mensaje
+        }
+
+        function procesarEventos() {
+          var estado = xmlHTTP.readyState;
+          console.log("procesar evento invocado " + estado);
+          // cuando estado = 4 procesamos el mensaje HTTP de respuesta
+          if (estado == 4) {
+            var respuesta = xmlHTTP.responseText;
+            console.log(respuesta);
+          }
+        }
+
+        function obtenerClave() {
+            // Preparo la llamada
+            xmlHTTP.onreadystatechange = procesarPeticionClave;
+            // paramentros de open (metodo a usar, servicio que se llama, esAsincrono)
+            xmlHTTP.open('GET', DIR_SERV_CLAVE, true);
+            //xmlHTTP.setRequestHeader('Content-Type', 'application/json');
+            xmlHTTP.send(null);
+        }
+
+        function codificar(textoPlano) {
+            // recorremos el texto plano codificando caracter a caracter y creando el 
+            // texto cifrado
+            var textoCodificado = "";
+            for (i = 0; i < textoPlano.length; i++) {
+                textoCodificado = textoCodificado + (textoPlano.charCodeAt(i) + claveCifrado);
+            }
+            return textoCodificado;
+        }
+
+        function procesarPeticionClave() {
+          var estado = xmlHTTP.readyState;
+          console.log("procesar evento invocado " + estado);
+          // cuando estado = 4 procesamos el mensaje HTTP de respuesta
+          if (estado == 4) {
+            claveCifrado = parseFloat(xmlHTTP.responseText);
+            console.log(claveCifrado);
+          }
+        }
+      </script>
+   </head>
+   <body>
+       <textarea cols="30" rows="10" id="textoPlano"></textarea>
+       <button onclick="codificarTexto();">Codificar</button>
+       <button onclick="enviarTextoCifrado();">Enviar texto cifrado</button>
+       <textarea cols="30" rows="10" id="textoCodificado"></textarea>
+   </body>
+</html>

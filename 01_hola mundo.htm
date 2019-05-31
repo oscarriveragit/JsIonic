@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <script language="javascript">
+        function calcular() {
+            var elemento = document.getElementsByName("textito");
+            var texto = document.getElementsByName("textito").value;
+            alert (texto);
+            var longitud = document.getElementsByName("textito").value.length;
+           
+            alert("ff " + document.getElementsByName("textito").value.length);
+        }
+        </script>
+    </head>
+    <body>
+        <form name="pepe">
+            <input type="text" name="textito">
+            <input type="button" onclick="calcular()">
+             
+        </form>
+    </body>
+</html>

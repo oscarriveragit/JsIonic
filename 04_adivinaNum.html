@@ -1,0 +1,113 @@
+<html>
+   <head>
+      <title>
+         P&aacute;gina con Javascript.
+      </title>
+      <script language="javascript">
+        /* juego de adivinar un numero que genera el programa
+           se permiten 5 intentos
+           el programa da pistas en plan es mayor o menor
+        */
+
+       var numSecreto;
+
+       function generarNumAleatorio(lim_inferior, lim_superior) {
+           // suponemos que los limites que llegan son num enteros y el superior es 
+           var numero = Math.ceil((Math.random()*(lim_superior - lim_inferior+1) + lim_inferior)); // confirmar si se necesita un +1 o un -1
+           console.log("El número aleatorio es " + numero);
+           return numero;
+       }
+
+       function jugar() {
+            var intentos = 0;
+            var conseguido = false;
+            var num;
+            document.getElementById("pistas").innerHTML = "";
+            // Obtenemos el nivel de juego seleccionado por el jugador
+            var nivel = document.getElementById("nivel").value;
+            console.log("el nivel es" + nivel);
+            // Obtenemos los parametros del nivel seleccionado: número tope de rango y vidas
+            var numMax = obtenerNumMax(nivel);
+            console.log("número tope " + numMax);
+            var vidas = obtenerVidas(nivel);
+            console.log("vidas " + vidas);
+            // Obtenemos un número aleatorio entre 1 y el número tope de rango en función del nivel de juego
+            numSecreto = generarNumAleatorio(0, numMax);
+            // Intentos del usuario de adivinar el número secreto
+            do {
+                intentos++;
+                // pedimos un número al usuario
+                num = prompt("Introduce un número entre 1 y " + numMax);
+                // comprobamos si es el numero secreto o si es menor o mayor y damos la pista correcta
+                if (numSecreto == num) { // El usuario ha acertado el número secreto
+                    conseguido = true;
+                } else if (numSecreto < num) { // El número introducido por el usuario es mayor que el número secreto
+                    document.getElementById("pistas").innerHTML = document.getElementById("pistas").innerHTML + 
+                        "<br>El número secreto es menor que " + num;
+                    if (intentos != vidas) {
+                        alert("El número secreto es menor. Te quedan " + (vidas-intentos) + " vidas. Intentalo de nuevo.");
+                    }
+                } else { // El número introducido por el usuario es menor que el número secreto
+                    document.getElementById("pistas").innerHTML = document.getElementById("pistas").innerHTML + 
+                        "<br>El número secreto es mayor que " + num;
+                    if (intentos != vidas) {
+                        alert("El número secreto es mayor. Te quedan " + (vidas-intentos) + " vidas. Intentalo de nuevo.");
+                    }
+                }
+
+            } while (intentos < vidas && !conseguido)
+            // fin del juego. Mostramos el mensaje final al usuario
+            if (conseguido) {
+                alert("Enhorabuena!! Lo has conseguido en " + (intentos-1) + " intentos");
+            } else  {
+                alert ("Ohhh! Esta vez no lo has conseguido. Intentalo de nuevo");
+            }
+       }
+
+       function obtenerNumMax(nivel) {
+           var numMax;
+           if (nivel == 1) {
+                numMax = 10;
+           } else if (nivel == 2) {
+                numMax = 20;
+           } else if (nivel == 3) {
+                numMax = 30;
+           } else if (nivel == 4) {
+                numMax = 50;
+           } else {
+                numMax = 100;
+           }
+           return numMax;
+       }
+
+       function obtenerVidas(nivel) {
+            var vidas;
+           if (nivel == 1) {
+                vidas = 3;
+           } else if (nivel == 2) {
+                vidas = 5;
+           } else if (nivel == 3) {
+                vidas = 8;
+           } else if (nivel == 4) {
+                vidas = 10;
+           } else {
+                vidas = 15;
+           }
+           return vidas;
+       }
+       
+      </script>
+   </head>
+   <body>
+       <label for="nivel">Nivel</label>
+        <select name="select" id="nivel">
+                <option value="1">Muy fácil</option> 
+                <option value="2">Fácil</option>
+                <option value="3">Normal</option> 
+                <option value="4">Difícil</option> 
+                <option value="5">Muy difícil</option> 
+        </select>
+        <button onclick="jugar();">Jugar</button>
+        <div id="pistas"></div>
+   </body>
+</html>

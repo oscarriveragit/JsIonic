@@ -1,0 +1,213 @@
+<!-- 
+Ejemplo para consumir datos del API de iTunes
+Vamos a usar un servicio para buscar música. 
+Le enviamos lo que queremos buscar y nos devuelve una
+lista de canciones que habra que mostrar en la pantalla.
+De cada canción mostraremos los siguientes datos:
+- trackid (oculto)
+- trackName
+- artistName
+- artworkUrl100
+- trackPrice
+- currency
+- previewUrl
+-->
+<html>
+   <head>
+        <title>
+            Buscando música en iTunes
+        </title>
+        <LINK href="15_buscando_en_iTunes.css" rel="stylesheet" type="text/css">
+        <script src="15_cancion_iTunes.js"></script>
+        <script language="javascript">
+            const URL_SERVICIO = "https://itunes.apple.com/search?media=music&limit=20&term=";
+            const URL_COMPRA = "http://10.1.2.10:8080/appwebprofe/Comprar";
+            var xmlHTTP = new XMLHttpRequest();
+
+            function buscar() {
+                // Mostramos el gif de cargando
+                mostrarEnEspera();
+                // recuperamos lo que queremos buscar
+                var txtBuscar = document.getElementById("txt_busqueda").value;
+                // Llamamos a iTunes para hacer la busqueda
+                buscarEnITunes(txtBuscar);
+            }
+
+            function buscarEnITunes(txtBuscar) {
+                // URL de llamada
+                urlLlamada = URL_SERVICIO + txtBuscar;
+                // Preparo la llamada
+                xmlHTTP.onreadystatechange = procesarRespuestaBusqueda;
+                // paramentros de open (metodo a usar, servicio que se llama, esAsincrono)
+                xmlHTTP.open('GET', urlLlamada, true);
+                //xmlHTTP.setRequestHeader('Content-Type', 'application/json');
+                xmlHTTP.send(null);
+            }
+            function procesarRespuestaBusqueda() {
+                var estado = xmlHTTP.readyState;
+                console.log("procesar evento invocado " + estado);
+                // cuando estado = 4 procesamos el mensaje HTTP de respuesta
+                if (estado == 4) {
+                    var respuesta = xmlHTTP.responseText;
+                    console.log(respuesta);
+                    mostrarRespuesta(respuesta);
+                    ocultarEnEspera();
+                }
+            }
+
+            function mostrarRespuesta(respuesta) {
+                // obtenemos un array con todas la canciones 
+                var lstCanciones = parsearRespuestaBusqueda(respuesta);
+                // recuperamos el div donde se mostraran las canciones
+                var elemDivCanciones = document.getElementById("resultados");
+                // mostramos las canciones por pantalla
+                var elemCancion;
+                for (i = 0; i < lstCanciones.length; i++) {
+                    elemCancion = prepararHtmlCancion(lstCanciones[i]);
+                    elemDivCanciones.appendChild(elemCancion);
+                }
+            }
+
+            function prepararHtmlCancion(cancion) {
+                // creamos los elementos HTML para mostrar la canción y sus datos
+                // HTML del contenedor, donde estarán todos los datos
+                var htmlCancion = document.createElement("DIV");
+                htmlCancion.id = cancion.id;
+                htmlCancion.className = "cancion";
+                // Imagen
+                var htmlImgCancion = document.createElement("IMG");
+                htmlImgCancion.src = cancion.imagen;
+                //htmlImgCancion.addEventListener('mouseover', mostrarPlay);
+                // campo check con el ID para las compras
+                var htmlIdCancion = document.createElement("INPUT");
+                htmlIdCancion.value = cancion.id;
+                htmlIdCancion.type = "checkbox";
+                htmlIdCancion.name = "id_cancion";
+                // Título 
+                var htmlTitulo = document.createElement("SPAN");
+                htmlTitulo.className = "tituloCancion";
+                htmlTitulo.innerHTML = cancion.titulo;
+                // Artista
+                var htmlArtista = document.createElement("SPAN");
+                htmlArtista.className = "artistaCancion";
+                htmlArtista.innerHTML = cancion.artista;
+                // Precio
+                var htmlPrecio = document.createElement("SPAN");
+                htmlPrecio.className = "precioCancion";
+                htmlPrecio.name = "precioCancion";
+                htmlPrecio.innerHTML = cancion.precio;
+                // Moneda
+                var htmlMoneda = document.createElement("SPAN");
+                htmlMoneda.className = "monedaCancion";
+                htmlMoneda.innerHTML = cancion.moneda;
+                // Muestra
+                var htmlMuestra = document.createElement("AUDIO");
+                htmlMuestra.className = "muestraCancion";
+                htmlMuestra.src = cancion.muestra;
+                htmlMuestra.controls = true;
+                htmlMuestra.attributes = "controls";
+                // añadimos los elementos
+                htmlCancion.appendChild(htmlImgCancion);
+                htmlCancion.appendChild(htmlIdCancion);
+                htmlCancion.appendChild(document.createElement("BR"));
+                htmlCancion.appendChild(htmlTitulo);
+                htmlCancion.appendChild(document.createElement("BR"));
+                htmlCancion.appendChild(htmlArtista);
+                htmlCancion.appendChild(document.createElement("BR"));
+                htmlCancion.appendChild(htmlPrecio);
+                htmlCancion.appendChild(htmlMoneda);
+                htmlCancion.appendChild(document.createElement("BR"));
+                htmlCancion.appendChild(htmlMuestra);
+                // devolvemos el html con el listado de las canciones
+                return htmlCancion;
+            }
+
+            function parsearRespuestaBusqueda(respuesta) {
+                var lstCancionesR = new Array();
+                var cancion;
+                var idCancion;
+                var titulo;
+                var artista;
+                var imagen;
+                var precio;
+                var moneda;
+                var muestra;
+                // Recorremos el JSON de respuesta, extrayendo las canciones y sus datos
+                // y guardandolas en un array
+                if (respuesta != null) {
+                    var JSONCanciones = JSON.parse(respuesta);
+                    var totalCanciones = JSONCanciones.resultCount;
+                    console.log("total de canciones devueltas " + totalCanciones);
+                    for (i = 0; i < totalCanciones; i++) {
+                        idCancion = JSONCanciones.results[i].trackId;
+                        console.log("id = " + idCancion);
+                        titulo = JSONCanciones.results[i].trackName;
+                        artista = JSONCanciones.results[i].artistName;
+                        imagen = JSONCanciones.results[i].artworkUrl100;
+                        precio = JSONCanciones.results[i].trackPrice;
+                        moneda = JSONCanciones.results[i].currency;
+                        muestra = JSONCanciones.results[i].previewUrl;
+                        cancion = new CancionITunes(idCancion, titulo, artista, imagen, precio, moneda, muestra);
+                        lstCancionesR.push(cancion);
+                    }
+                }
+                console.log
+                return lstCancionesR;
+            }
+            function mostrarEnEspera() {
+                document.getElementById("esperando").hidden = false;
+            }
+            function ocultarEnEspera() {
+                document.getElementById("esperando").hidden = true;
+            }
+
+            function comprar() {
+                // obtenemos las canciones a comprar (los id de las canciones)
+                var idCanciones = document.getElementsByName("id_cancion");
+                //var precioCanciones = document.getElementsByName("precioCancion");
+                var precioCanciones = document.getElementsByClassName("precioCancion");
+                var precioPedido = 0;
+                var idCancionesSeleccionadas = new Array();
+                var pedido;
+                for (i = 0; i < idCanciones.length; i++) {
+                    if (idCanciones[i].checked) {
+                        precioPedido = precioPedido + parseFloat(precioCanciones[i].innerHTML);
+                        idCancionesSeleccionadas.push(idCanciones[i].value);
+                    }
+                }
+                var pedido = {
+                    precio_pedido: precioPedido,
+                    lista_ids: idCancionesSeleccionadas
+                };
+                var pedidoJSON = JSON.stringify(pedido);
+                console.log("pedidoJSON = " + pedidoJSON);
+                // Preparo la llamada
+                xmlHTTP.onreadystatechange = resultadoCompra;
+                // paramentros de open (metodo a usar, servicio que se llama, esAsincrono)
+                xmlHTTP.open('POST', URL_COMPRA, true);
+                xmlHTTP.setRequestHeader('Content-Type', 'application/json');
+                xmlHTTP.send(pedidoJSON); // el cuerpo del mensaje
+            }
+
+            function resultadoCompra() {
+                var estado = xmlHTTP.readyState;
+                console.log("procesar evento invocado " + estado);
+                // cuando estado = 4 procesamos el mensaje HTTP de respuesta
+                if (estado == 4) {
+                    var respuesta = xmlHTTP.responseText;
+                    console.log(respuesta);
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <label for="txt_busqueda">Buscar canci&oacute;n: </label>
+        <input type="text" id="txt_busqueda">
+        <button onclick="buscar()">Buscar</button>
+        <button onclick="comprar()">Comprar</button>
+        <br>
+        <br>
+        <div id="resultados"></div>
+        <div id="esperando" class="centrar" hidden><img src="img/15/cargando-gif-animado-12.gif"></div>
+    </body>
+</html>

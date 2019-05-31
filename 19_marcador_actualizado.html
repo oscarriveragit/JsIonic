@@ -1,0 +1,84 @@
+<!-- 
+    Seguimiento de un evento deportivo. Se mostrará el resultado
+    actualizado de un evento. Cada cierto tiempo se refrescará 
+    el resultado. El resultado se obtendrá de un servidor mediante
+    AJAX. También habrá un botón que permitirá al usuario referescar 
+    mamualmente.
+    La ifnormación a mostrar de resultado son:
+    - goles local
+    - goles visitantes
+    - foto
+    - lista (minuto y comentario)
+-->
+<html>
+    <head>
+        <title>
+            Seguimiento evento deportivo
+        </title>
+        <script language="javascript">
+            // CONSTANTES
+            const URL_RESULTADOS = "http://10.1.2.10:8080/Marcador/ActualizarInfoPartido";
+            const URL_BASE_IMG = "http://10.1.2.10:8080/Marcador/"
+            // VARIABLES GLOBALES
+            var xmlHTTP = new XMLHttpRequest();
+            // FUNCIONES
+            window.onload = function () {
+                // cargamos los departamentos obtenidos por AJAX
+                cargarResultados();
+                idIntervalo = window.setInterval(cargarResultados, 7000);
+            };
+            
+            function cargarResultados() {
+                // Preparo la llamada
+                xmlHTTP.onreadystatechange = recogerResultados;
+                // paramentros de open (metodo a usar, servicio que se llama, esAsincrono)
+                xmlHTTP.open('GET', URL_RESULTADOS, true);
+                //xmlHTTP.setRequestHeader('Content-Type', 'application/json');
+                xmlHTTP.send(null);
+            }
+
+            function recogerResultados() {
+                var estado = xmlHTTP.readyState;
+                console.log("procesar evento invocado " + estado);
+                var resultados;
+                // cuando estado = 4 procesamos el mensaje HTTP de respuesta
+                if (estado == 4 && xmlHTTP.status == 200) {
+                    resultados = JSON.parse(xmlHTTP.responseText);
+                    console.log("resultados " + resultados);
+                    mostrarResultados(resultados); 
+                }
+            }
+
+            function mostrarResultados(resultados) {
+                // mostrar foto
+                var foto = resultados.fotopartido;
+                document.getElementById("foto").src = URL_BASE_IMG + foto;
+                // mostrar resultado
+                var golesLocal = resultados.marcador.goles_local;
+                var golesVisitante = resultados.marcador.goles_visitante;
+                document.getElementById("resultado").innerHTML = golesLocal + " - " + golesVisitante;
+                // mostrar comentarios
+                var comentarios = resultados.listacomentarios;
+                console.log("comentarios " + comentarios);
+                var htmlDivComentario;
+                var divComentarios = document.getElementById("comentarios");
+                // borramos los comentarios antes de cargar los nuevos
+                while (divComentarios.firstChild) {
+                    divComentarios.removeChild(divComentarios.firstChild);
+                }
+                // cargamos los comentarios 
+                for (i = comentarios.length - 1; i >= 0; i--) {
+                    htmlDivComentario = document.createElement("DIV");
+                    htmlDivComentario.innerHTML = comentarios[i].minuto + " - " + comentarios[i].comentario;
+                    divComentarios.appendChild(htmlDivComentario);
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div><img id="foto"></div>
+        <div id="resultado"></div>
+        <div><a href="javascript:cargarResultados()">Refrescar</a></div>
+        <div id="comentarios"></div>
+    </body>
+</html>

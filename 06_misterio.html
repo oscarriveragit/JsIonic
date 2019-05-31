@@ -1,0 +1,57 @@
+<html>
+
+<head>
+    <title>
+        ADIVINA adivinanza
+    </title>
+
+    <script language="javascript">
+        // consideramos que es capicua mientras no se de la primera ocurrencia de que no lo es
+        var esCapicua;
+        var indIni;
+        var indFin;
+        var literalAValidar;
+
+        function ValidarSiEsCapicua() {
+            // inicializamos variables
+            esCapicua = true;
+            indIni = 0;
+            // recuperamos el literal que queremos comprobar si es capicua
+            literalAValidar = document.getElementById("palabra").value;
+            // inicializamos el indice final
+            indFin = literalAValidar.length - 1;
+            // Llamamos a la función comparaCapicua() (que compara los caracteres desde los extremos y avanzado hacia el centro)
+            comparaCapicua();
+            // Mostramos el resultado
+            alert(esCapicua ? "ES CAPICUA" : "NO ES CAPICUA");
+            // Le damos la vuelta a la palabra
+            alert(darVueltaPalabra(literalAValidar));
+        }
+        function comparaCapicua() {
+            if ((indIni <= indFin) && (esCapicua)) {
+                esCapicua = literalAValidar.charAt(indIni) == literalAValidar.charAt(indFin);
+                indIni++;
+                indFin--;
+                comparaCapicua();
+            }
+        }
+
+        // otra forma de comprobar si la palabra es capicua o palindromo, es darle la vuelta
+        // y compararla con la original, si son iguales es capicua
+        function darVueltaPalabra(palabra) {
+            var palabraAlReves = "";
+            for (indice = palabra.length; indice > 0; indice--) {
+                palabraAlReves = palabraAlReves + palabra.charAt(indice-1);
+            }
+            return palabraAlReves;
+        }
+    </script>
+</head>
+
+<body>
+    <label for="palabra">PALABRA</label>
+    <input type="text" id="palabra">
+    <button onclick="ValidarSiEsCapicua();">Es capicua?</button>
+</body>
+
+</html>

@@ -1,3 +1,2 @@
-# JsIonic
-Curso de Js e Ionic
-Ejercicios para crear JS html e IONIC
+# ejCursoJS
+Ejemplos del curso de javascript avanzado e ionic

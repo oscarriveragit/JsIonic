@@ -1,0 +1,105 @@
+<!-- 
+    Tendremos dos select uno de departamentos y otro de trabajadores de
+    esos departamentos.
+    Cargamos el select de departamentos obteniendo los datos mediante AJAX
+    y cuando un usuario selecciona un departamento en ese select se carga
+    el selec trabajadores con las trabajadores correspondientes obtenidos
+    mediante AJAX
+-->
+<html>
+    <head>
+        <title>
+            Carga de select con AJAX
+        </title>
+        <script language="javascript">
+            // Constantes
+            const URL_DPTOS = "http://10.1.2.10:8080/appwebprofe/CargaMenuSelect";
+            const URL_TRABAJADORES = "http://10.1.2.10:8080/appwebprofe/CargarTrabajadores?dpto=";
+            // Variables globales
+            var xmlHTTP = new XMLHttpRequest();
+
+            // Función de carga inicial
+            window.onload = function () {
+                // cargamos los departamentos obtenidos por AJAX
+                cargarDepartamentos();
+            };
+
+            function cargarDepartamentos() {
+                // Preparo la llamada
+                xmlHTTP.onreadystatechange = procesarDepartamentos;
+                // paramentros de open (metodo a usar, servicio que se llama, esAsincrono)
+                xmlHTTP.open('GET', URL_DPTOS, true);
+                //xmlHTTP.setRequestHeader('Content-Type', 'application/json');
+                xmlHTTP.send(null);
+            }
+            function procesarDepartamentos() {
+                var estado = xmlHTTP.readyState;
+                console.log("procesar evento invocado " + estado);
+                var lstDepartamentos;
+                // cuando estado = 4 procesamos el mensaje HTTP de respuesta
+                if (estado == 4) {
+                    lstDepartamentos = JSON.parse(xmlHTTP.responseText);
+                    console.log("los departamentos son " + lstDepartamentos);
+                    cargarSelectDepartamentos(lstDepartamentos); 
+                }
+            }
+
+            function cargarSelectDepartamentos(lstDptos) {
+                var selectDptos = document.getElementById("departamentos");
+                var htmlOption;
+                for (i = 0; i < lstDptos.length; i++) {
+                    htmlOption = document.createElement("OPTION");
+                    htmlOption.value = lstDptos[i].numero;
+                    htmlOption.innerHTML = lstDptos[i].nombre;
+                    selectDptos.appendChild(htmlOption);
+                }
+            }
+
+            function cargarTrabajadores() {
+                console.log("dentro de la carga de trabajadores");
+                var selectDptos = document.getElementById("departamentos");
+                var idDptoSeleccionado = selectDptos.options[selectDptos.selectedIndex].value;
+                if (idDptoSeleccionado != "XX") {
+                    console.log("el dpto seleccionado es " + idDptoSeleccionado);
+                    // Preparo la llamada
+                    xmlHTTP.onreadystatechange = procesarTrabajadores;
+                    // paramentros de open (metodo a usar, servicio que se llama, esAsincrono)
+                    xmlHTTP.open('GET', URL_TRABAJADORES + idDptoSeleccionado, true);
+                    //xmlHTTP.setRequestHeader('Content-Type', 'application/json');
+                    xmlHTTP.send(null);
+                }
+            } 
+
+            function procesarTrabajadores() {
+                var estado = xmlHTTP.readyState;
+                console.log("procesar evento invocado " + estado);
+                var lstTrabajadores;
+                // cuando estado = 4 procesamos el mensaje HTTP de respuesta
+                if (estado == 4) {
+                    lstTrabajadores = JSON.parse(xmlHTTP.responseText);
+                    console.log(lstTrabajadores);
+                    cargarSelectTrabajadores(lstTrabajadores); 
+                }
+            }
+
+            function cargarSelectTrabajadores(lstTrabajadores) {
+                var selectTrabajadores = document.getElementById("trabajadores");
+                // vaciamos el select antes de cargar los nuevos elementos
+                while (selectTrabajadores.firstChild) {
+                    selectTrabajadores.removeChild(selectTrabajadores.firstChild);
+                }
+                var htmlOption;
+                for (i = 0; i < lstTrabajadores.length; i++) {
+                    htmlOption = document.createElement("OPTION");
+                    htmlOption.innerHTML = lstTrabajadores[i].nombre;
+                    selectTrabajadores.appendChild(htmlOption);
+                }
+            }
+            
+        </script>
+    </head>
+    <body>
+        <label for="departamentos">Departamento</label><select id="departamentos" onchange="cargarTrabajadores();"><option value="XX">...</option></select>
+        <label for="trabajadores">Trabajador</label><select id="trabajadores"> </select>
+    </body>
+</html>
